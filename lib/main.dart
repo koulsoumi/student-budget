@@ -135,15 +135,29 @@ double get epargneRestante {
   return reste > 0 ? reste : 0;
 }
 
-  double get budgetRestant {
+
+double get budgetRestant {
   double totalDepenses = 0;
 
-  for (final depense in depenses) {
+  for (final depense in depensesDuMois) {
     totalDepenses += depense.montant;
   }
 
   return budgetMensuel - totalDepenses;
 }
+
+double get pourcentageBudgetUtilise {
+  if (budgetMensuel <= 0) return 1.0;
+
+  double totalDepenses = 0;
+
+  for (final depense in depensesDuMois) {
+    totalDepenses += depense.montant;
+  }
+
+  return (totalDepenses / budgetMensuel).clamp(0.0, 1.0);
+}
+
   @override
   void initState() {
     super.initState();
@@ -236,7 +250,7 @@ Future<void> chargerDonnees() async {
       TextEditingController();
   final TextEditingController montantController =
       TextEditingController();
-  String categorieSelectionnee = 'Autre';    
+  String categorieAjout = 'Autre';   
    
 
   
@@ -311,7 +325,7 @@ List<Operation> operationsDuMois(
                 }).toList(),
                 onChanged: (valeur) {
   if (valeur != null) {
-    categorieSelectionnee = valeur;
+    
   }
 },
               ),
@@ -350,10 +364,10 @@ List<Operation> operationsDuMois(
 
                 setState(() {
   final operation = Operation(
-    description: description,
-    montant: montant,
-    categorie: categorieSelectionnee,
-  );
+  description: description,
+  montant: montant,
+  categorie: categorieAjout,
+);
 
   if (estRevenu) {
     revenus.add(operation);
@@ -541,6 +555,50 @@ Text(
     color: Color(0xFF087F5B),
   ),
 ),
+
+const SizedBox(height: 12),
+
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    const Text(
+      'Budget utilisé',
+      style: TextStyle(
+        fontSize: 13,
+        color: Colors.black54,
+      ),
+    ),
+    Text(
+      '${(pourcentageBudgetUtilise * 100).round()} %',
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: budgetRestant < 0
+            ? Colors.red
+            : const Color(0xFF087F5B),
+      ),
+    ),
+  ],
+),
+
+const SizedBox(height: 8),
+
+ClipRRect(
+  borderRadius: BorderRadius.circular(10),
+  child: LinearProgressIndicator(
+    value: pourcentageBudgetUtilise,
+    minHeight: 10,
+    backgroundColor: const Color(0xFFE6ECE9),
+    valueColor: AlwaysStoppedAnimation<Color>(
+      budgetRestant < 0
+          ? Colors.red
+          : pourcentageBudgetUtilise >= 0.8
+              ? Colors.orange
+              : const Color(0xFF087F5B),
+    ),
+  ),
+),
+
 
 const SizedBox(height: 12),
 if (budgetRestant < 0)
